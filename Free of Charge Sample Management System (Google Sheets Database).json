@@ -1,0 +1,1034 @@
+{
+  "name": "Free of Charge Sample Management System (Google Sheets Database)",
+  "nodes": [
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Use this tool to pull the email of the client",
+        "documentId": {
+          "__rl": true,
+          "value": "1exhIuavurgQBRidpMxvBmj5wZvJtH7ptAD0sATvOaj8",
+          "mode": "list",
+          "cachedResultName": "Form Responses",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1exhIuavurgQBRidpMxvBmj5wZvJtH7ptAD0sATvOaj8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 657659893,
+          "mode": "list",
+          "cachedResultName": "Client List",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1exhIuavurgQBRidpMxvBmj5wZvJtH7ptAD0sATvOaj8/edit#gid=657659893"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.6,
+      "position": [
+        -784,
+        992
+      ],
+      "id": "52a30e8c-6514-401c-af47-17986ecd2cc9",
+      "name": "Client List Tool",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0tYTNOWlfNzHqUBL",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Use this tool to pull the information about the seller and their bosses (e.g., Seller's  Boss' Email)",
+        "documentId": {
+          "__rl": true,
+          "value": "1exhIuavurgQBRidpMxvBmj5wZvJtH7ptAD0sATvOaj8",
+          "mode": "list",
+          "cachedResultName": "Form Responses",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1exhIuavurgQBRidpMxvBmj5wZvJtH7ptAD0sATvOaj8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 887474214,
+          "mode": "list",
+          "cachedResultName": "Sellers List",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1exhIuavurgQBRidpMxvBmj5wZvJtH7ptAD0sATvOaj8/edit#gid=887474214"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.6,
+      "position": [
+        -656,
+        992
+      ],
+      "id": "645c3a05-eda2-476b-a868-ed1ef739ada5",
+      "name": "Seller List Tool",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0tYTNOWlfNzHqUBL",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        -528,
+        992
+      ],
+      "id": "65d6cd94-7920-4b27-8e55-533b166c002f",
+      "name": "Calculator Tool"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "sendTo": "kshawky344@gmail.com",
+        "subject": "Approval Required",
+        "message": "=Seller {{ $json.message.content.Seller_Name }} has requested an approval to send free of charge samples of the following products:\n\n{{ \n  $json.message.content.products\n    .map(item => `${item.product} - Price/Unit: EGP ${item.Price_per_unit} - Quantity: ${item.quantity} - Order Price: EGP ${item.Order_Price}`)\n    .join('\\n\\n') \n}}\n\nThe total Price is: EGP {{ $json.message.content.Total_Price }}\n\n\nPlease \"Approve\" or \"Deny\" to process this request.",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double"
+          }
+        },
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        16,
+        864
+      ],
+      "id": "ebcd70d3-7b3d-4346-bc81-30bd13aa4798",
+      "name": "Send message to seller's boss and wait for response (<2000EGP)",
+      "webhookId": "c04d513c-37c2-4d4f-b1b8-96a710251785",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "721eiHMcl5Jlv7x8",
+          "name": "Main"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "372e3f39-0895-4a7b-befb-2453f45cfd9c",
+              "leftValue": "={{ $json.message.content.Total_Price }}",
+              "rightValue": 2000,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "ignoreCase": false
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -208,
+        768
+      ],
+      "id": "3ff564c3-1832-4c9d-b32f-7f07252e70cb",
+      "name": ">2000EGP ?"
+    },
+    {
+      "parameters": {
+        "sendTo": "kshawky344@gmail.com",
+        "subject": "Your request has been denied",
+        "emailType": "text",
+        "message": "=Your request of {{ $('Pull Data from Sheets & Turn Form Data into Readable JSON').item.json.message.content.Product }} to be sent to {{ $('Pull Data from Sheets & Turn Form Data into Readable JSON').item.json.message.content.Client }} of value {{ $('Pull Data from Sheets & Turn Form Data into Readable JSON').item.json.message.content.Total_Price }} has been denied by {{ $('Pull Data from Sheets & Turn Form Data into Readable JSON').item.json.message.content.Boss_Email }}.",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        512,
+        880
+      ],
+      "id": "39586ec4-c5d9-4234-b909-0326b4c1946e",
+      "name": "Send refusal message to seller",
+      "webhookId": "c04d513c-37c2-4d4f-b1b8-96a710251785",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "721eiHMcl5Jlv7x8",
+          "name": "Main"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "sendTo": "kshawky344@gmail.com",
+        "subject": "=Free of charge sample request for {{ $('Pull Data from Sheets & Turn Form Data into Readable JSON').item.json.message.content.Client_Name }}",
+        "message": "=Seller {{ $('Pull Data from Sheets & Turn Form Data into Readable JSON').item.json.message.content.Seller_Name }} has requested a free of charge sample order for {{ $('Pull Data from Sheets & Turn Form Data into Readable JSON').item.json.message.content.Client_Name }} containing the following products:\n\n{{ \n$('Pull Data from Sheets & Turn Form Data into Readable JSON')\n.item.json.message.content.products.map(item => \n    `${item.product} - Quantity: ${item.quantity} - Order Price: EGP ${item.Order_Price}`)\n    .join('\\n\\n') \n}}\n\nThe total value of these samples: EGP {{ $('Pull Data from Sheets & Turn Form Data into Readable JSON').item.json.message.content.Total_Price }}\n\nPlease click the \"Complete\" button below once the invoice for these samples have been printed, if there is not enough quanitity, press \"Denied\".",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double",
+            "approveLabel": "Complete",
+            "disapproveLabel": "Denied"
+          }
+        },
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        512,
+        672
+      ],
+      "id": "10c0a964-2ba1-4fab-a294-89313b45b202",
+      "name": "Send request to supply chain",
+      "webhookId": "346e1ada-4fff-47f8-9572-46950f512776",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "721eiHMcl5Jlv7x8",
+          "name": "Main"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "sendTo": "kshawky344@gmail.com",
+        "subject": "Approval Required",
+        "message": "=Seller {{ $json.message.content.Seller_Name }} has requested an approval to send free of charge samples of the following products:\n\n{{ \n  $json.message.content.products\n    .map(item => `${item.product} - Price/Unit: EGP ${item.Price_per_unit} - Quantity: ${item.quantity} - Order Price: EGP ${item.Order_Price}`)\n    .join('\\n\\n') \n}}\n\nThe total Price is: EGP {{ $json.message.content.Total_Price }}\n\n\nPlease \"Approve\" or \"Deny\" to process this request.",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double"
+          }
+        },
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        16,
+        672
+      ],
+      "id": "78c241d6-d1c3-42df-860c-5b5a52877b85",
+      "name": "Send message to big boss and wait for response (>2000EGP)",
+      "webhookId": "c04d513c-37c2-4d4f-b1b8-96a710251785",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "721eiHMcl5Jlv7x8",
+          "name": "Main"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "372e3f39-0895-4a7b-befb-2453f45cfd9c",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": 2000,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "ignoreCase": false
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        704,
+        672
+      ],
+      "id": "6195dae5-9385-466f-b120-5d4014359238",
+      "name": "Approved by Supply Chain?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "372e3f39-0895-4a7b-befb-2453f45cfd9c",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": 2000,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "ignoreCase": false
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        224,
+        768
+      ],
+      "id": "6bb4223e-fa4d-40b6-8418-531568e2741a",
+      "name": "Approved by Boss?"
+    },
+    {
+      "parameters": {
+        "sendTo": "kshawky344@gmail.com",
+        "subject": "Your request has been denied",
+        "emailType": "text",
+        "message": "=Your request of {{ $('Pull Data from Sheets & Turn Form Data into Readable JSON').item.json.message.content.Product }} to be sent to {{ $('Pull Data from Sheets & Turn Form Data into Readable JSON').item.json.message.content.Client }} of value {{ $('Pull Data from Sheets & Turn Form Data into Readable JSON').item.json.message.content.Total_Price }} has been denied by the supply chain due to insufficient quantity.",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        912,
+        880
+      ],
+      "id": "8feaf5b4-a602-48ec-80fa-e6a9cfccd241",
+      "name": "Send low quantity message to seller",
+      "webhookId": "c04d513c-37c2-4d4f-b1b8-96a710251785",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "721eiHMcl5Jlv7x8",
+          "name": "Main"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Use this tool to pull the price of each individual product",
+        "documentId": {
+          "__rl": true,
+          "value": "1exhIuavurgQBRidpMxvBmj5wZvJtH7ptAD0sATvOaj8",
+          "mode": "list",
+          "cachedResultName": "Form Responses",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1exhIuavurgQBRidpMxvBmj5wZvJtH7ptAD0sATvOaj8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 874056713,
+          "mode": "list",
+          "cachedResultName": "Product List",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1exhIuavurgQBRidpMxvBmj5wZvJtH7ptAD0sATvOaj8/edit#gid=874056713"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.6,
+      "position": [
+        -400,
+        992
+      ],
+      "id": "88ba9dc0-79f9-4229-982b-ad9649f40bef",
+      "name": "Product List Tool",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0tYTNOWlfNzHqUBL",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1exhIuavurgQBRidpMxvBmj5wZvJtH7ptAD0sATvOaj8",
+          "mode": "list",
+          "cachedResultName": "Form Responses",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1exhIuavurgQBRidpMxvBmj5wZvJtH7ptAD0sATvOaj8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 549876588,
+          "mode": "list",
+          "cachedResultName": "Invoice Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1exhIuavurgQBRidpMxvBmj5wZvJtH7ptAD0sATvOaj8/edit#gid=549876588"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRangeA1",
+              "range": "A2:A"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.6,
+      "position": [
+        1408,
+        976
+      ],
+      "id": "f7284396-048e-4b7f-b500-138195aa737a",
+      "name": "Invoice Log Tool",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0tYTNOWlfNzHqUBL",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "372e3f39-0895-4a7b-befb-2453f45cfd9c",
+              "leftValue": "={{ $('Pull Data from Sheets & Turn Form Data into Readable JSON').item.json.message.content.Total_Price }}",
+              "rightValue": 2000,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "ignoreCase": false
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        912,
+        656
+      ],
+      "id": "7cec4b8d-fede-4e6e-ac2f-a3da60f7216c",
+      "name": "(>2000EGP)?"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "259db6ce-bb6a-4441-b896-36e564ad6372",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1008,
+        768
+      ],
+      "id": "bc175142-53da-46b1-ada4-84957d6c1257",
+      "name": "Webhook",
+      "webhookId": "259db6ce-bb6a-4441-b896-36e564ad6372"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "GPT-4O"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=# Overview\nYou are an AI agent that manages a system where sellers fill out a form in order to allow for the discharge of a free sample for the client from the supply chain.\n\n## Objectives:\nOnce the seller fills out the form, you will be presented with a body of data, turn it into readable JSON which should contain the following data:\n- Seller Name\n- Products \n- Client\n- Quantities of each product\n\nBased on the data presented, you are to pull out the following information from the tools provided:\n- The email of the seller (Seller List Tool).\n- The email of the seller's boss (Seller List Tool).\n- The email of the client (Client List Tool).\n- The Total Order Price of each Product being ordered (Quantity of each product * Price of that product) (Product List Tool for Price of Product).\n- The total price of the full order (all the order prices of each product combined).\n\n## Output Instructions:\n- Your ONLY output should be a JSON containing all the previous information provided followed by the information required.\n- Any number being calculated/pulled should be in number format and not string format.\n- Example:\n\nXsl:\nProducts ordered: Product 1, Product 2, Product 3\nQuantity: 1, 3, 7 (Respectively)\n\nOutput:\n  {\n    \"Seller_Name\": \"name\",\n    \"Seller_Email\": \"name@example.com\",\n    \"Boss_Email\": \"name@example.com\",\n    \"Client_Name\": \"name\",\n    \"Client_Email\": \"name@example.com\",\n    \"OFC Type\",\n    \"products\": [\n      {\n        \"product\": \"prod_1\",\n        \"quantity\": ####,\n        \"Price_per_unit\": ####,\n        \"Order_Price\": ####\n      },\n      {\n        \"product\": \"prod_2\",\n        \"quantity\": ####,\n        \"Price_per_unit\": ####,\n        \"Order_Price\": ####\n      }\n    ],\n    \"Total_Price\": ####\n  }\n\n## Example Workflow:\n1) Receive the response of the form and turn it into readable JSON (e.g., Seller 1, [Products], Client 3, [Quantities]).\n2) Use the seller list Tool to pull the email of the seller and the seller's boss.\n3) Use the client list Tool to pull the email of the client.\n4) Use the provided PDF to get the name of each product and its quantity\n5) Use the product list Tool to pull the price each of the products.\n6) Use the calculator Tool to multiply the price of each product by its quantity.\n7) Return a JSON containing all the individual data.\n\nFirst, turn this body into a readable JSON file:\n\n{{ $json.body }}\n\nThen extract the required data"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -688,
+        768
+      ],
+      "id": "9204f365-7b4d-4698-a77b-6eece7d5fb74",
+      "name": "Pull Data from Sheets & Turn Form Data into Readable JSON",
+      "credentials": {
+        "openAiApi": {
+          "id": "9E5J18q8xWr3AKuc",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1exhIuavurgQBRidpMxvBmj5wZvJtH7ptAD0sATvOaj8",
+          "mode": "list",
+          "cachedResultName": "Form Responses",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1exhIuavurgQBRidpMxvBmj5wZvJtH7ptAD0sATvOaj8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 549876588,
+          "mode": "list",
+          "cachedResultName": "Invoice Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1exhIuavurgQBRidpMxvBmj5wZvJtH7ptAD0sATvOaj8/edit#gid=549876588"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Invoice_ID": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Invoice_ID', ``, 'string') }}",
+            "Invoice_Date": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Invoice_Date', ``, 'string') }}",
+            "Seller_Name": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Seller_Name', ``, 'string') }}",
+            "Seller_Email": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Seller_Email', ``, 'string') }}",
+            "Client_Name": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Client_Name', ``, 'string') }}",
+            "Client_Email": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Client_Email', ``, 'string') }}",
+            "Approved_By": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Approved_By', ``, 'string') }}",
+            "Product": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Product', ``, 'string') }}",
+            "Quantity": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Quantity', ``, 'string') }}",
+            "Price_of_Product": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Price_of_Product', ``, 'string') }}",
+            "Order_Price": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Order_Price', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Invoice_ID",
+              "displayName": "Invoice_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Invoice_Date",
+              "displayName": "Invoice_Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Seller_Name",
+              "displayName": "Seller_Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Seller_Email",
+              "displayName": "Seller_Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Client_Name",
+              "displayName": "Client_Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Client_Email",
+              "displayName": "Client_Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Approved_By",
+              "displayName": "Approved_By",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Product",
+              "displayName": "Product",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Quantity",
+              "displayName": "Quantity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Price_of_Product",
+              "displayName": "Price_of_Product",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Order_Price",
+              "displayName": "Order_Price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.6,
+      "position": [
+        1568,
+        976
+      ],
+      "id": "9d4b6a47-3b7b-4e0e-ba3e-f00f929ef113",
+      "name": "Populate Invoice Tool",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0tYTNOWlfNzHqUBL",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=# Overview\nYou are an AI agent that manages an invoice ticketing system which saves the invoice data of free of charge sample orders sent by sellers to their clients.\n\n## Objectives:\nYour task is to populate the invoice log using data provided to you once the supply chain has approved an order and printed its invoices for each product.\n\nBased on the data presented your task is to do the following:\n- Create a unique Invoice_ID in the format (SYS-YYMMDD-XXXX) where XXXX is a unique identifier which reset daily (check YYMMDD to see if date is different & Use the Invoice Log Tool to ensure XXXX is unique).\n- Populate the Invoice Log based on the information provided.\n\n## Output Instructions:\nWhen populating the Invoice Log, your task is to make sure that for every product ordered, you are making a different row for each product. All the data including the Invoice_ID, Invoice_Date, Seller_Name, Seller_Email, Client_Name, Client_Email, Approved_By should all be THE EXACT SAME for all the rows which contain invoiced produced for products in the same order. The only different should be the Product (i.e. Product Name), Quantity, Price_of Product, Order_Price.\n\nExample Output (3 products ordered):\n\nRow 1: \nInvoice_ID - Invoice_Date - Seller_Name - Seller_Email -  - Client_Name - Client_Email - Approved_By (Boss Email) - \"Product 1 Name\" - Quantity of Product 1 Ordered - Price of Product 1 - Order Price of Product 1\n\nRow 2: \nInvoice_ID - Invoice_Date - Seller_Name - Seller_Email - Client_Name - Client_Email - Approved_By (Boss Email) - \"Product 2 Name\" - Quantity of Product 2 Ordered - Price of Product 2 - Order Price of Product 2\n\nRow 3: \nInvoice_ID - Invoice_Date - Seller_Name - Seller_Email - Client_Name - Client_Email - Approved_By (Boss Email) - \"Product 3 Name\" - Quantity of Product 3 Ordered - Price of Product 3 - Order Price of Product 3\n\n## Example Workflow:\n1) Received Data after supply chain approval\n2) Generate Invoice_ID\n3) Used provided data to append invoice of first product to first empty row\n4) Second product to second empty row while keeping all necessary data the same as previous row (Same Order)\n5) Repeat for all products in the order\n\nHere is the data:\n\nToday's Date: {{ $now }}\n\nSeller's Name: {{ $('Pull Data from Sheets & Turn Form Data into Readable JSON').item.json.message.content.Seller_Name }}\n\nSeller's Email: {{ $('Pull Data from Sheets & Turn Form Data into Readable JSON').item.json.message.content.Seller_Email }}\n\nClient's Name: {{ $('Pull Data from Sheets & Turn Form Data into Readable JSON').item.json.message.content.Client_Name }}\n\nClient's Email: {{ $('Pull Data from Sheets & Turn Form Data into Readable JSON').item.json.message.content.Client_Email }}\n\nBoss' Email: {{ $('Pull Data from Sheets & Turn Form Data into Readable JSON').item.json.message.content.Boss_Email }}\n\nProducts, Quantities, Price/Unit, Order Price:\n{{ $('Pull Data from Sheets & Turn Form Data into Readable JSON').item.json.message.content.products.map(item => `${item.product} | ${item.quantity} | ${item.Price_per_unit} | ${item.Order_Price}`).join('\\n\\n') }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        1296,
+        800
+      ],
+      "id": "584448b5-b0c4-45c0-9ed5-2227a5618a89",
+      "name": "Create Invoice ID & Date and Populate Invoice Log (<2000EGP)",
+      "credentials": {
+        "openAiApi": {
+          "id": "9E5J18q8xWr3AKuc",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=# Overview\nYou are an AI agent that manages an invoice ticketing system which saves the invoice data of free of charge sample orders sent by sellers to their clients.\n\n## Objectives:\nYour task is to populate the invoice log using data provided to you once the supply chain has approved an order and printed its invoices for each product.\n\nBased on the data presented your task is to do the following:\n- Create a unique Invoice_ID in the format (SYS-YYMMDD-XXXX) where XXXX is a unique identifier which reset daily (check YYMMDD to see if date is different & Use the Invoice Log Tool to ensure XXXX is unique).\n- Populate the Invoice Log based on the information provided.\n\n## Output Instructions:\nWhen populating the Invoice Log, your task is to make sure that for every product ordered, you are making a different row for each product. All the data including the Invoice_ID, Invoice_Date, Seller_Name, Seller_Email, Client_Name, Client_Email, Approved_By should all be THE EXACT SAME for all the rows which contain invoiced produced for products in the same order. The only different should be the Product (i.e. Product Name), Quantity, Price_of Product, Order_Price.\n\nExample Output (3 products ordered):\n\nRow 1: \nInvoice_ID - Invoice_Date - Seller_Name - Seller_Email -  - Client_Name - Client_Email - Approved_By (Boss Email) - \"Product 1 Name\" - Quantity of Product 1 Ordered - Price of Product 1 - Order Price of Product 1\n\nRow 2: \nInvoice_ID - Invoice_Date - Seller_Name - Seller_Email - Client_Name - Client_Email - Approved_By (Boss Email) - \"Product 2 Name\" - Quantity of Product 2 Ordered - Price of Product 2 - Order Price of Product 2\n\nRow 3: \nInvoice_ID - Invoice_Date - Seller_Name - Seller_Email - Client_Name - Client_Email - Approved_By (Boss Email) - \"Product 3 Name\" - Quantity of Product 3 Ordered - Price of Product 3 - Order Price of Product 3\n\n## Example Workflow:\n1) Received Data after supply chain approval\n2) Generate Invoice_ID\n3) Used provided data to append invoice of first product to first empty row\n4) Second product to second empty row while keeping all necessary data the same as previous row (Same Order)\n5) Repeat for all products in the order\n\nHere is the data:\n\nToday's Date: {{ $now }}\n\nSeller's Name: {{ $('Pull Data from Sheets & Turn Form Data into Readable JSON').item.json.message.content.Seller_Name }}\n\nSeller's Email: {{ $('Pull Data from Sheets & Turn Form Data into Readable JSON').item.json.message.content.Seller_Email }}\n\nClient's Name: {{ $('Pull Data from Sheets & Turn Form Data into Readable JSON').item.json.message.content.Client_Name }}\n\nClient's Email: {{ $('Pull Data from Sheets & Turn Form Data into Readable JSON').item.json.message.content.Client_Email }}\n\nBoss' Email: kshawky344@gmail.com\n\nProducts, Quantities, Price/Unit, Order Price:\n{{ $('Pull Data from Sheets & Turn Form Data into Readable JSON').item.json.message.content.products.map(item => `${item.product} | ${item.quantity} | ${item.Price_per_unit} | ${item.Order_Price}`).join('\\n\\n') }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        1296,
+        624
+      ],
+      "id": "d084d5bc-f025-4dfb-b1f9-bc6200e86c64",
+      "name": "Create Invoice ID & Date and Populate Invoice Log (>2000EGP)",
+      "credentials": {
+        "openAiApi": {
+          "id": "9E5J18q8xWr3AKuc",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## FORM SUBMITTED BY SELLER",
+        "height": 320,
+        "width": 272
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1104,
+        640
+      ],
+      "typeVersion": 1,
+      "id": "bd9adddc-1548-4e83-9530-505dd6c63bba",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## AI AGENT TO TURN FORM DATA INTO READABLE JSON AND PULL OTHER DATA FROM DATABASE (GOOGLE SHEETS)\n",
+        "height": 656,
+        "width": 560,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -832,
+        480
+      ],
+      "typeVersion": 1,
+      "id": "dddda06f-b727-476a-aba1-ee4741a86351",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## GET APPROVAL FROM THE CORRECT BOSS BASED ON ORDER PRICE\n",
+        "height": 656,
+        "width": 688,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -272,
+        480
+      ],
+      "typeVersion": 1,
+      "id": "a4e40b53-7f10-4ee7-af16-4f31487ac393",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## SEND REQUEST TO SUPPLY CHAIN AND WAIT APPROVAL OR DENIAL BASED ON QUANITITY AVAILABLE\n",
+        "height": 656,
+        "width": 688,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        416,
+        480
+      ],
+      "typeVersion": 1,
+      "id": "bca281de-4380-41d6-9e26-a590da424e76",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## AI AGENTS THAT CREATE INVOICE ID AND DATE AND APPEND THEM TO THE INVOICE LOG IN THE DATABASE IN ORDER TO TRACK FOC SAMPLE ORDERS\n",
+        "height": 656,
+        "width": 656,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1104,
+        480
+      ],
+      "typeVersion": 1,
+      "id": "acdf49bd-7b57-4b7a-98f6-63ae9bfa22bb",
+      "name": "Sticky Note4"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Client List Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Pull Data from Sheets & Turn Form Data into Readable JSON",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Seller List Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Pull Data from Sheets & Turn Form Data into Readable JSON",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculator Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Pull Data from Sheets & Turn Form Data into Readable JSON",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message to seller's boss and wait for response (<2000EGP)": {
+      "main": [
+        [
+          {
+            "node": "Approved by Boss?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    ">2000EGP ?": {
+      "main": [
+        [
+          {
+            "node": "Send message to big boss and wait for response (>2000EGP)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send message to seller's boss and wait for response (<2000EGP)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send request to supply chain": {
+      "main": [
+        [
+          {
+            "node": "Approved by Supply Chain?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message to big boss and wait for response (>2000EGP)": {
+      "main": [
+        [
+          {
+            "node": "Approved by Boss?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Approved by Boss?": {
+      "main": [
+        [
+          {
+            "node": "Send request to supply chain",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send refusal message to seller",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Approved by Supply Chain?": {
+      "main": [
+        [
+          {
+            "node": "(>2000EGP)?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send low quantity message to seller",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Product List Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Pull Data from Sheets & Turn Form Data into Readable JSON",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Invoice Log Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Create Invoice ID & Date and Populate Invoice Log (<2000EGP)",
+            "type": "ai_tool",
+            "index": 0
+          },
+          {
+            "node": "Create Invoice ID & Date and Populate Invoice Log (>2000EGP)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "(>2000EGP)?": {
+      "main": [
+        [
+          {
+            "node": "Create Invoice ID & Date and Populate Invoice Log (>2000EGP)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Invoice ID & Date and Populate Invoice Log (<2000EGP)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Pull Data from Sheets & Turn Form Data into Readable JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pull Data from Sheets & Turn Form Data into Readable JSON": {
+      "main": [
+        [
+          {
+            "node": ">2000EGP ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Populate Invoice Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Create Invoice ID & Date and Populate Invoice Log (<2000EGP)",
+            "type": "ai_tool",
+            "index": 0
+          },
+          {
+            "node": "Create Invoice ID & Date and Populate Invoice Log (>2000EGP)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Invoice ID & Date and Populate Invoice Log (<2000EGP)": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "timezone": "Africa/Cairo"
+  },
+  "versionId": "0c2f8b04-d49d-4a5b-8262-e95d9746e54a",
+  "meta": {
+    "templateId": "6270",
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4aec7919e1e0c8726e098edfb39287eed2ff4960caf2920f8ad2c7da297acf68"
+  },
+  "id": "5TpypxH47izZGqhW",
+  "tags": []
+}
